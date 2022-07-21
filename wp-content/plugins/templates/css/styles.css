@@ -1,0 +1,124 @@
+div#suggestions.postbox ul, #seopressor-information ul {
+    list-style-type: disc;
+    margin-bottom: 1.5%;
+    margin-left: 3%;
+    margin-top: 1.5%;
+}
+#seopressor-suggestions ul {
+	margin-bottom: 1.5%;
+    margin-left: 3%;
+    margin-top: 1.5%;
+}
+
+tr.scores-red-background {
+    background: #ff7f7f
+}
+
+tr.scores-red-background td {
+    border-color: #ef6f6f
+}
+
+td.scores-red-anchor a {
+    color: #903a4d
+}
+
+div#ps.tablenav div.tablenav-pages {
+    height: auto
+}
+
+#site_wide_keywords_list.large-text {
+    width: 45%
+}
+
+.widget_box {
+    font-size: 11px;
+    line-height: 1
+}
+
+.widget_box ul {
+    font-size: 11px;
+    margin-left: 10%
+}
+
+.widget_box table {
+    margin-bottom: 5%;
+    text-align: left;
+    width: 100%
+}
+
+.suggestions_yes {
+    list-style-image: url(../images/green-check.png);
+    list-style-type: disc
+}
+
+.suggestions_no {
+    list-style-image: url(../images/red-cross.png);
+    list-style-type: disc
+}
+
+.box_score_green {
+    color: green
+}
+
+.box_score_green_text {
+    color: green;
+    width: 60%
+}
+
+.box_score_red_text {
+    color: red;
+    width: 60%
+}
+
+.box_table_header {
+    height: 20px
+}
+
+.left {
+    text-align: left
+}
+
+
+#seopressor-information .title {
+    font: 18px / 24px Georgia, "Times New Roman", "Bitstream Charter", Times, serif;
+    margin: 8px 0
+}
+
+#seopressor-information {
+    margin-bottom: 3%
+}
+
+#seopressor-information h3.title {
+    margin-top: 2.5%
+}
+
+#seopressor-information h4.title {
+    font-size: 1.1em
+}
+
+.box_score_green, .box_score_red {
+    font-size: 180%;
+    text-align: center;
+    width: 40%
+}
+
+td.scores-red-not-anchor, td.scores-red-anchor a:hover {
+    color: #991919
+}
+
+div#seopressor-powered, .center {
+    text-align: center
+}
+
+.box_score_red {
+    color: red
+}
+
+#seopressor-information ul li ul, ul.sub-list {
+    list-style-type: circle
+}
+
+#number_of_posts_for_bulk_requests {
+    width: 4%;
+    text-align: right
+}
