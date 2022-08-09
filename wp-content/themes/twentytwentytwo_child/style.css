@@ -1,5 +1,5 @@
 /*
-Theme Name: Twenty Twenty-Two Child
+Theme Name: Twenty Twenty-two Child
 Theme URI: https://www.markelliottva.com/twentytwentytwochild/
 Description: A modified version of Twenty Twenty-Two for markelliottva.com
 Author: Mark Elliott
@@ -8,7 +8,7 @@ Template: twentytwentytwo
 Version: 1.0.0
 License: GNU General Public License v2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
-Text Domain: twentytwentytwochild
+Text Domain: twentytwentytwo-child
 Tags: one-column, custom-colors, custom-menu, custom-logo, editor-style, featured-images, full-site-editing, block-patterns, rtl-language-support, sticky-post, threaded-comments
 */
 
@@ -36,19 +36,22 @@ a {
 
 a:hover,
 a:focus {
-  text-decoration-style: dashed;
+  text-decoration-style: solid;
 }
 
 a:active {
   text-decoration: none;
 }
 
-.wp-block-navigation .wp-block-navigation-item a:hover,
-.wp-block-navigation .wp-block-navigation-item a:focus {
-  text-decoration: underline;
-  text-decoration-style: solid;
+a.wp-block-navigation-item_content a:hover,
+a.wp-block-navigation-item_content a:focus {
+  text-decoration-thickness: 2px;
+  text-decoration-color: blue;
 }
 
+a.wp-block-navigation-item__content {
+  font-size: 1.25em;
+}
 /*
  * Search and File Block button styles.
  * Necessary until the following issues are resolved in Gutenberg:
@@ -142,4 +145,21 @@ body > .is-root-container > .wp-block-template-part > .wp-block-cover,
   padding-bottom: var(--wp--custom--spacing--large);
   padding-right: var(--wp--custom--spacing--outer);
   padding-left: var(--wp--custom--spacing--outer);
+}
+
+/* Styling for Contact Form */
+input.wpcf7-form-control.wpcf7-text.wpcf7-validates-as-required {
+  padding: 10px;
+}
+
+input.wpcf7-form-control.has-spinner.wpcf7-submit {
+  padding: 10px;
+  border-radius: 5px;
+  font-size: 1.25em;
+  font-weight: 700;
+}
+
+/* Table styling in Rifle Posts */
+.table-col1 {
+  width: 20%;
 }
