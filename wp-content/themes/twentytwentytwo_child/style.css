@@ -163,3 +163,27 @@ input.wpcf7-form-control.has-spinner.wpcf7-submit {
 .table-col1 {
   width: 20%;
 }
+
+/* Post Fonts */
+.wp-block-post-title {
+  font-weight: 700;
+}
+
+.wp-block-query-title {
+  font-weight: 500;
+}
+
+/* Format Inline Images */
+.inline-images-left,
+.inline-images-right {
+  width: 250px;
+  padding: 20px;
+}
+
+.inline-images-left {
+  float: left;
+}
+
+.inline-images-right {
+  float: right;
+}
