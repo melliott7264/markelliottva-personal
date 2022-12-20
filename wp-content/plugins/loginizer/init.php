@@ -5,7 +5,7 @@ if(!function_exists('add_action')){
 	exit;
 }
 
-define('LOGINIZER_VERSION', '1.7.2');
+define('LOGINIZER_VERSION', '1.7.6');
 define('LOGINIZER_DIR', dirname(LOGINIZER_FILE));
 define('LOGINIZER_URL', plugins_url('', LOGINIZER_FILE));
 define('LOGINIZER_PRO_URL', 'https://loginizer.com/features#compare');
@@ -243,7 +243,7 @@ function loginizer_load_plugin(){
 	$loginizer['d_msg']['hours_err'] = __('hour(s)', 'loginizer');
 	
 	// Message Strings
-	$loginizer['msg'] = get_option('loginizer_msg');
+	$loginizer['msg'] = get_option('loginizer_msg', []);
 	
 	foreach($loginizer['d_msg'] as $lk => $lv){
 		if(empty($loginizer['msg'][$lk])){
@@ -258,7 +258,7 @@ function loginizer_load_plugin(){
 	$loginizer['2fa_d_msg']['otp_answer'] = __('Your Answer', 'loginizer');
 	
 	// Message Strings
-	$loginizer['2fa_msg'] = get_option('loginizer_2fa_msg');
+	$loginizer['2fa_msg'] = get_option('loginizer_2fa_msg', []);
 	
 	foreach($loginizer['2fa_d_msg'] as $lk => $lv){
 		if(empty($loginizer['2fa_msg'][$lk])){
@@ -342,7 +342,9 @@ $site_name','loginizer');
 	$loginizer['passwordless_msg'] = empty($options['passwordless_msg']) ? $loginizer['pl_d_msg'] : $options['passwordless_msg'];
 	$loginizer['passwordless_msg_is_custom'] = empty($options['passwordless_msg']) ? 0 : 1;
 	$loginizer['passwordless_html'] = empty($options['passwordless_html']) ? 0 : $options['passwordless_html'];
-	
+	$loginizer['passwordless_redirect'] = empty($options['passwordless_redirect']) ? 0 : $options['passwordless_redirect'];
+	$loginizer['passwordless_redirect_for'] = empty($options['passwordless_redirect_for']) ? 0 : $options['passwordless_redirect_for'];
+
 	// 2FA OTP Email to Login
 	$options = get_option('loginizer_2fa_email_template');
 	$loginizer['2fa_email_d_sub'] = 'OTP : Login at $site_name';
@@ -437,6 +439,9 @@ $site_name';
 	
 	$loginizer['wp_admin_d_msg'] = __('LZ : Not allowed via WP-ADMIN. Please access over the new Admin URL', 'loginizer');
 	
+	// CSRF Protection
+	$loginizer['enable_csrf_protection'] = get_option('loginizer_csrf_protection');
+	
 	// ----------------
 	// PRO INIT END
 	// ----------------
@@ -466,12 +471,32 @@ $site_name';
 		
 		}
 		
+		if(!file_exists(LOGINIZER_DIR.'/premium.php') && current_user_can('activate_plugins') && !empty($loginizer['csrf_promo']) && $loginizer['csrf_promo'] > 0 && $loginizer['csrf_promo'] < (time() - 86400)){
+			
+			add_action('admin_notices', 'loginizer_csrf_promo');
+			
+		}
+		
 		// Are we to disable the promo
 		if(isset($_GET['loginizer_promo']) && (int)$_GET['loginizer_promo'] == 0){
 			update_option('loginizer_promo_time', (0 - time()) );
 			die('DONE');
 		}
 		
+		$loginizer['backuply_promo'] = get_option('loginizer_backuply_promo_time');
+		
+		if(empty($loginizer['backuply_promo'])){
+			$loginizer['backuply_promo'] = abs($loginizer['promo_time']);
+			update_option('loginizer_backuply_promo_time', $loginizer['backuply_promo']);
+		}
+		
+		// Setting CSRF Promo time
+		$loginizer['csrf_promo'] = get_option('loginizer_csrf_promo_time');
+		
+		if(empty($loginizer['csrf_promo'])){
+			$loginizer['csrf_promo'] = abs($loginizer['promo_time']);
+			update_option('loginizer_csrf_promo_time', $loginizer['csrf_promo']);
+		}
 	}
 
 }
@@ -866,7 +891,10 @@ function loginizer_error_handler($errors, $redirect_to){
 	global $wpdb, $loginizer, $lz_user_pass, $lz_cannot_login;
 	
 	//echo 'loginizer_error_handler :';print_r($errors->errors);echo '<br>';
-	
+	if(is_null($errors)){
+		return true;
+	}
+
 	// Remove the empty password error
 	if(is_wp_error($errors)){
 		
@@ -1055,6 +1083,15 @@ function loginizer_page_header($title = 'Loginizer'){
 	<table cellpadding="8" cellspacing="1" width="100%" class="fixed">
 	<tr>
 		<td valign="top">';
+		
+	if(file_exists(LOGINIZER_DIR.'/premium.php') && !empty($loginizer['enable_csrf_protection']) && !loginizer_is_csrf_prot_mod_set()){
+
+		$lz_error['csrf_mod'] = esc_html__('You have enabled CSRF protection but the .htaccess file has not been updated', 'loginizer');
+		
+		if(!empty($lz_error)){
+			lz_report_error($lz_error);echo '<br />';
+		}
+	}
 
 }
 
@@ -1122,6 +1159,30 @@ function loginizer_page_footer(){
 			</div>
 		</div>';
 		}
+		
+		echo '
+		<div class="postbox" style="min-width:0px !important;">
+			<div class="postbox-header">
+			<h2 class="hndle ui-sortable-handle">
+				<span><a target="_blank" href="https://backuply.com/?from=loginizer-plugin"><img src="'.LOGINIZER_URL.'/images/backuply-black.png" width="100%" /></a></span>
+			</h2>
+			</div>
+			<div class="inside">
+				<i>'.__('Secure your WordPress site by creating backups with Backuply', 'loginizer').'</i>:<br>
+				<ul class="lz-right-ul">
+					<li>'.__('Remote Backup to 8 location','loginizer').'</li>
+					<li>'.__('Auto Backups', 'loginizer').'</li>
+					<li>'.__('Backup Rotation', 'loginizer').'</li>
+					<li>'.__('One-Click Restore', 'loginizer').'</li>
+					<li>'.__('Stress-free Migration', 'loginizer').'</li>
+					<li>'.__('Backup to Google Drive', 'loginizer').'</li>
+					<li>'.__('Backup to Amazon S3', 'loginizer').'</li>
+					<li>'.__('Backup to Dropbox', 'loginizer').'</li>
+					<li>'.__('Backup to FTP,FTPS and many more ...','loginizer').'</li>
+				</ul>
+				<center><a class="button button-primary" target="_blank" href="https://wordpress.org/plugins/backuply/">'.__('Visit Backuply','loginizer').'</a></center>
+			</div>
+		</div>';
 		
 		echo '
 		<div class="postbox" style="min-width:0px !important;">
@@ -1292,6 +1353,13 @@ input[type="text"], textarea, select {
 	 }
 	
 	loginizer_newsletter_subscribe();
+	
+	if(!empty($loginizer['backuply_promo']) && $loginizer['backuply_promo'] > 0 && $loginizer['backuply_promo'] < (time() - (7*24*3600))){
+		
+		loginizer_backuply_promo();
+		
+	}
+	
 	
 	echo '
 	<div class="lz-welcome-panel">
@@ -1563,6 +1631,22 @@ function loginizer_page_brute_force(){
 		
 		if(!empty($lockout_time) && $lockout_time < 0){
 			$error[] = __('Lockout Time value is invalid', 'loginizer');
+		}
+		
+		if(!empty($max_lockouts) && $max_lockouts < 0){
+			$error[] = __('Max Lockouts value is invalid', 'loginizer');
+		}
+		
+		if(!empty($lockouts_extend) && $lockouts_extend < 0){
+			$error[] = __('Extended Lockout value is invalid', 'loginizer');
+		}
+		
+		if(!empty($reset_retries) && $reset_retries < 0){
+			$error[] = __('Reset Retries value is invalid', 'loginizer');
+		}
+		
+		if(!empty($notify_email) && $notify_email < 0){
+			$error[] = __('Email Notification value is invalid', 'loginizer');
 		}
 		
 		$lockout_time = $lockout_time * 60;
@@ -3949,7 +4033,9 @@ function loginizer_page_passwordless(){
 		$option['passwordless_sub'] = @stripslashes($_POST['lz_passwordless_sub']);
 		$option['passwordless_msg'] = @stripslashes($_POST['lz_passwordless_msg']);
 		$option['passwordless_html'] = (int) lz_optpost('lz_passwordless_html');
-		
+		$option['passwordless_redirect'] = esc_url_raw($_POST['lz_passwordless_redirect']);
+		$option['passwordless_redirect_for'] = map_deep($_POST['lz_passwordless_redirect_for'], 'sanitize_text_field');
+
 		// Is there an error ?
 		if(!empty($lz_error)){
 			return loginizer_page_passwordless_T();
@@ -4023,7 +4109,7 @@ input[type="text"], textarea, select {
 		<?php wp_nonce_field('loginizer-options'); ?>
 		<table class="form-table">
 			<tr>
-				<th scope="row" valign="top" style="width:350px !important"><label for="email_pass_less"><?php echo __('Enable PasswordLess Login', 'loginizer'); ?></label></th>
+				<td scope="row" valign="top" style="width:350px !important"><label for="email_pass_less"><?php echo __('Enable PasswordLess Login', 'loginizer'); ?></label></td>
 				<td>
 					<input type="checkbox" value="1" name="email_pass_less" id="email_pass_less" <?php echo lz_POSTchecked('email_pass_less', (empty($loginizer['email_pass_less']) ? false : true)); echo (defined('SITEPAD') ? 'disabled="disabled"' : '') ?> />
 				</td>
@@ -4061,11 +4147,47 @@ input[type="text"], textarea, select {
 				</td>
 			</tr>
 			<tr>
-				<th scope="row" valign="top" style="width:350px !important"><label for="lz_passwordless_html"><?php echo __('Send email as HTML', 'loginizer'); ?></label></th>
+				<td scope="row" valign="top"><label for="lz_passwordless_html"><?php echo __('Send email as HTML', 'loginizer'); ?></label></td>
 				<td>
 					<input type="checkbox" value="1" name="lz_passwordless_html" id="lz_passwordless_html" <?php echo lz_POSTchecked('lz_passwordless_html', (empty($loginizer['passwordless_html']) ? false : true)); ?> />
 				</td>
 			</tr>
+			<tr>
+				<td scope="row" valign="top" style="width:350px !important">
+					<label for="lz_passwordless_redirect"><?php echo __('Custom redirect to', 'loginizer'); ?></label><br/>
+					<span class="exp"><?php echo __('Redirects user to a page of your website other than the admin panel', 'loginizer'); ?></span>
+				</td>
+				<td align="top">
+					<input type="text" size="40" value="<?php echo lz_htmlizer(!empty($_POST['lz_passwordless_redirect']) ? stripslashes($_POST['lz_passwordless_redirect']) : (empty($lz_options['passwordless_redirect']) ? '' : $lz_options['passwordless_redirect'])); ?>" name="lz_passwordless_redirect" id="lz_passwordless_redirect" />
+				</td>
+			</tr>
+			
+			<tr>
+				<td scope="row" valign="top" style="width:350px !important">
+					<label for="lz_passwordless_redirect_for"><?php echo __('Custom redirect for', 'loginizer'); ?></label><br/>
+					<span class="exp"><?php echo __('Select the user roles for whom this custom redirect will be used', 'loginizer'); ?></span>
+				</td>
+				<td align="top">
+				<?php
+					$editable_roles = get_editable_roles();
+					echo '<div style="max-height:120px; overflow:auto;">';
+					
+					foreach($editable_roles as $role => $details) {
+						$name = translate_user_role( $details['name'] );
+						// Preselect specified role.
+						if(!empty($lz_options['passwordless_redirect_for']) && in_array($role, $lz_options['passwordless_redirect_for'])) {
+							$r .= "\n\t<input type=\"checkbox\" checked name=\"lz_passwordless_redirect_for[]\" value='" . esc_attr($role) . "' style=\"margin-top:5px\">$name</option>";
+						} else {
+							$r .= "\n\t<input type=\"checkbox\" value='" . esc_attr($role) . "' name=\"lz_passwordless_redirect_for[]\">$name</option>";
+						}
+
+						$r .= '<br/>';
+					}
+					echo $r . '</div>';
+				?>
+				</td>
+			</tr>
+			
 		</table><br />
 		<center><input name="save_lz" class="button button-primary action" value="<?php echo __('Save Settings', 'loginizer'); ?>" type="submit" /></center>
 		</form>
@@ -4322,6 +4444,14 @@ function loginizer_page_security(){
 		
 	}
 	
+	
+	if(isset($_POST['save_lz_csrf_protection'])){
+		update_option('loginizer_csrf_protection', empty(lz_optpost('enable_csrf_protection')) ? false : true);
+		
+		delete_transient('loginizer_csrf_mod_rewrite');
+		$GLOBALS['lz_saved'] = true;
+	}
+	
 	// Call theme
 	loginizer_page_security_T();
 	
@@ -4419,7 +4549,6 @@ if(!defined('SITEPAD')){
 	
 		</div>
 	</div>
-	<br />
 	
 	<?php
 	
@@ -4474,7 +4603,6 @@ if(!defined('SITEPAD')){
 	
 		</div>
 	</div>
-	<br />
 	
 	<?php
 	
@@ -4491,6 +4619,26 @@ if(!defined('SITEPAD')){
 ?>
 
 <script type="text/javascript">
+
+function lz_update_htaccess_admin(e){
+	
+	var admin_name = jQuery(e).val();
+	
+	if(admin_name.length == 0){
+		admin_name = 'wp-admin';
+	}
+
+	var textarea = jQuery('.lz-htaccess-textarea');
+	
+	if(textarea.length == 0) {
+		return;
+	}
+	
+	var htaccess = textarea.val();
+	htaccess = htaccess.replace(/\^.+?\(/, '^' + admin_name + '(');
+	textarea.val(htaccess);
+
+}
 
 
 function dirname(path) {
@@ -4545,6 +4693,12 @@ function lz_test_wp_admin(){
 					</td>
 					</tr>';
 				}
+				
+				if(file_exists(LOGINIZER_DIR.'/premium.php') && !empty($loginizer['enable_csrf_protection']) && empty($loginizer['admin_slug'])){
+
+					echo '<div style="color: #856404; background-color: #fff3cd; border-color: #ffeeba; padding: 15px; font-size:1rem; font-weight:400;">'.esc_html__('Note: Be careful while changing the Admin name as your CSRF Protection is on', 'loginizer').'</div>';
+				
+				}
 			?>
 			<tr>
 				<td scope="row" valign="top" colspan="2">
@@ -4557,7 +4711,7 @@ function lz_test_wp_admin(){
 					<span class="exp"><?php echo __('Set blank to reset to the original wp-admin URL', 'loginizer'); ?></span>
 				</td>
 				<td>
-					<input type="text" size="50" value="<?php echo lz_optpost('admin_slug', $loginizer['admin_slug']); ?>" name="admin_slug" id="lz_admin_slug" />
+					<input type="text" size="50" value="<?php echo lz_optpost('admin_slug', $loginizer['admin_slug']); ?>" name="admin_slug" id="lz_admin_slug" onchange="lz_update_htaccess_admin(this)"/>
 				</td>
 			</tr>
 			<tr>
@@ -4578,6 +4732,10 @@ function lz_test_wp_admin(){
 					<input type="text" size="50" value="<?php echo lz_htmlizer(!empty($_POST['wp_admin_msg']) ? stripslashes($_POST['wp_admin_msg']) : @$loginizer['wp_admin_msg']); ?>" name="wp_admin_msg" id="lz_wp_admin_msg" />
 				</td>
 			</tr>
+
+			<?php
+				loginizer_htaccess_rules();
+			?>
 			<tr>
 				<td scope="row" valign="top" style="width:200px !important">
 					<label><?php echo __('I have setup .htaccess', 'loginizer'); ?></label><br>
@@ -4593,8 +4751,97 @@ function lz_test_wp_admin(){
 	
 		</div>
 	</div>
-	<br />
 </form>
+
+<script type="text/javascript">
+function lz_csrf_htaccess_update(e){
+	event.preventDefault();
+	
+	var tb = jQuery(e).closest('table'),
+	csrf_enabled = tb.find('[name="enable_csrf_protection"]'),
+	admin_name = tb.find('#lz_admin_slug');
+	
+	var data = new Object();
+	
+	// Setting admin name if anything is set
+	if(admin_name && admin_name.val()){
+		data['admin_name'] = admin_name.val();
+	}
+	
+	if(csrf_enabled){
+		data['csrf'] = true;
+	} else {
+		data['csrf'] = false;
+	}
+	
+	data['action'] = 'loginizer_update_csrf_mod';
+	data['nonce']	= '<?php echo wp_create_nonce('loginizer_admin_ajax');?>';
+	
+	var new_ajaxurl = '<?php echo admin_url('admin-ajax.php'); ?>'
+	
+	// AJAX and on success function
+	jQuery.post(new_ajaxurl, data, function(response){
+		
+		if(response['success'] == true){
+			alert("<?php esc_html_e('.htaccess has been updated !', 'loginizer'); ?>");
+		}
+	
+	// Throw an error for failures
+	}).fail(function() {
+		alert("<?php esc_html_e('Was unable to update the .htaccess file so please update it manually', 'loginizer'); ?>");
+	});
+	
+	return false;
+	
+}
+
+function lz_show_rewrite_rule(e){
+	event.preventDefault();
+	jQuery(e).closest('td').find('textarea').toggle();
+}
+
+
+</script>
+
+<!-- Begin CSRF Protection -->
+<form action="" method="post" loginizer-premium-only="1">
+	<div id="" class="postbox">
+	
+		<div class="postbox-header">
+		<h2 class="hndle ui-sortable-handle">
+			<span><?php esc_html_e('CSRF Protection', 'loginizer'); ?>&nbsp; <span style="color:red;">New</span></span>
+		</h2>
+		</div>
+		
+		<div class="inside">
+		
+			<?php wp_nonce_field('loginizer-options'); ?>
+			<table class="form-table">
+				<tr>
+					<td scope="row" valign="top" colspan="2">
+						<i><?php esc_html_e('This helps in preventing CSRF attacks as it updates the admin URLS with a session string which make it difficult and nearly impossible for the attacker to predict the URL', 'loginizer'); ?></i>
+					</td>
+				</tr>
+				<tr>
+					<td scope="row" valign="top" style="width:400px !important">
+						<label><?php esc_html_e('Enable CSRF Protection', 'loginizer'); ?></label><br>
+						<span class="exp"><?php esc_html_e('If enabled, it will update the URL of wp-admin with a random session string in the URL making it hard to predict the URL.', 'loginizer'); ?></span>
+					</td>
+					<td valign="top">
+						<input type="checkbox" value="1" name="enable_csrf_protection" <?php echo lz_POSTchecked('enable_csrf_protection', (empty($loginizer['enable_csrf_protection']) ? false : true)); ?> />
+					</td>
+				</tr>
+				<?php
+					loginizer_htaccess_rules(true);
+				?>
+			</table><br />
+			<div style="text-align: center;"><input name="save_lz_csrf_protection" class="button button-primary action" value="<?php esc_html_e('Save Settings', 'loginizer'); ?>" type="submit" />
+			</div>
+		</div>
+	</div>	
+</form>
+<!-- End CSRF Protection -->
+
 
 <script type="text/javascript">
 
@@ -4794,6 +5041,68 @@ function add_lz_bl_domains(){
 }
 	
 	loginizer_page_footer();
+	
+}
+
+// .htaccess UI options for wp-admin and CSRF
+function loginizer_htaccess_rules($is_csrf = false){
+	global $loginizer;
+	
+	$admin_slug = 'wp-admin';
+
+	if(!empty($loginizer['admin_slug'])){
+		$admin_slug = $loginizer['admin_slug'];
+	}
+
+	// getting sub directory if any
+	$home_root = parse_url(home_url());
+
+	if(isset($home_root['path'])){
+		$home_root = trailingslashit($home_root['path']);
+	} else {
+		$home_root = '/';
+	}
+		
+	// Selecting admin slug
+	$admin_slug = 'wp-admin';
+
+	if(!empty($loginizer['admin_slug'])){
+		$admin_slug = $loginizer['admin_slug'];
+	}
+	
+	// Setting the rule
+	$rule = '# BEGIN Loginizer' . "\n";
+	$rule .= '<IfModule mod_rewrite.c>' . "\n";
+	$rule .= 'RewriteEngine On' . "\n";
+	$rule .= 'RewriteBase ' . $home_root . "\n\n";
+	$rule .= 'RewriteRule ^' . $admin_slug . '(-lzs.{20})?(/?)(.*) wp-admin/$3 [L]' . "\n";
+	$rule .= '</IfModule>' . "\n";
+	$rule .= '# END Loginizer' . "\n";
+
+	if(is_writable(ABSPATH . '/.htaccess')){
+		echo '<tr>
+			<td scope="row" valign="top" style="width:400px !important">
+				<label>'. esc_html__('Update .htaccess', 'loginizer').'</label><br>
+				<span class="exp">'. (!empty($is_csrf) ? esc_html__('Rewrites rule for CSRF session URL', 'loginizer') : esc_html__('Rewrites rule to change wp-admin and if you have a Multisite then check', 'loginizer') . ' <a href="'.LOGINIZER_DOCS.'Renaming_the_WP-Admin_Area" target="_blank">our guide</a>') . '</span>
+			</td>
+			<td valign="top">
+				<button class="button" style="background: #5cb85c; color:white; border:#5cb85c;" onclick="lz_csrf_htaccess_update(this)">Update .htaccess</button><a onClick="lz_show_rewrite_rule(this)" href="#" style="margin-left:5px; line-height: 2; font-weight:500;">Show Rewrite Rule</a><br/><br/>
+				
+				<textarea rows="8" readonly style="display:none;" class="lz-htaccess-textarea">' . trim($rule) . '</textarea>
+			</td>
+		</tr>';
+		
+	} else {
+		echo '<tr>
+			<td scope="row" valign="top" style="width:400px !important">
+				<label>'. esc_html__('Manually Update .htaccess', 'loginizer') . '</label><br>
+				<span class="exp">' . esc_html__('You can manually update your .htaccess by adding the given code at the top of your .htaccess file', 'loginizer'). '</span>
+			</td>
+			<td valign="top">
+				<textarea rows="8" readonly class="lz-htaccess-textarea">' . trim($rule) . '</textarea>
+			</td>
+		</tr>';
+	}
 	
 }
 
@@ -5192,6 +5501,38 @@ function loginizer_dismiss_newsletter(){
 
 add_action('wp_ajax_loginizer_dismiss_newsletter', 'loginizer_dismiss_newsletter');
 
+function loginizer_dismiss_backuply(){
+
+	// Some AJAX security
+	check_ajax_referer('loginizer_admin_ajax', 'nonce');
+	 
+	if(!current_user_can('manage_options')){
+		wp_die('Sorry, but you do not have permissions to change settings.');
+	}
+	
+	update_option('loginizer_backuply_promo_time', (0 - time()));
+	echo 1;
+	wp_die();
+}
+
+add_action('wp_ajax_loginizer_dismiss_backuply', 'loginizer_dismiss_backuply');
+
+function loginizer_dismiss_csrf(){
+
+	// Some AJAX security
+	check_ajax_referer('loginizer_admin_ajax', 'nonce');
+	 
+	if(!current_user_can('manage_options')){
+		wp_die('Sorry, but you do not have permissions to change settings.');
+	}
+	
+	update_option('loginizer_csrf_promo_time', (0 - time()));
+	echo 1;
+	wp_die();
+}
+
+add_action('wp_ajax_loginizer_dismiss_csrf', 'loginizer_dismiss_csrf');
+
 function loginizer_newsletter_subscribe(){
 	
 	$newsletter_dismiss = get_option('loginizer_dismiss_newsletter');
@@ -5259,6 +5600,126 @@ function loginizer_newsletter_subscribe(){
 	</script>';
 	
 	return true;
+}
+
+function loginizer_backuply_promo(){
+	
+	$plugins = get_plugins();
+	
+	// Dont show Backuply Promo if its already installed
+	if(array_key_exists('backuply-pro/backuply-pro.php', $plugins) || array_key_exists('backuply/backuply.php', $plugins)){
+		return;
+	}
+	
+	if(isset($_REQUEST['install_backuply'])){
+		if(!wp_verify_nonce($_REQUEST['security'], 'loginizer_install_backuply') || !current_user_can('activate_plugins')){
+			die('Only Admin can access it');
+		}
+
+		loginizer_backuply_install();
+		return;
+	}
+
+	echo '<div class="notice is-dismissible lz-welcome-panel lz-backuply-dismissible" style="padding:20px; margin:0;">
+			<table>
+				<tr>
+					<th width="25%">
+						<img src="'.LOGINIZER_URL.'\images\backuply-square.png" height="150px" width="150px"/>
+					</th>
+					<td width="75%">
+						<div class="inside" style="margin-left: 20px;">
+							<strong><i>'.__('Backups are the best form of security. Secure your WordPress site by creating backups with Backuply','loginizer').'</i>:</strong><br>
+							<ul class="lz-right-ul">
+								<li>'.__('Backup to remote locations like FTP, FTPS, SFTP, WebDAV, Google Drive, OneDrive, Dropbox, Amazon S3','loginizer').'</li>
+								<li>'.__('Auto Backups','loginizer').'</li>
+								<li>'.__('Easy One-Click restores','loginizer').'</li>
+								<li>'.__('Stress Free Migrations','loginizer').'</li>
+							</ul>
+								<a class="button button-primary" href="'.esc_url(admin_url('admin.php?page=loginizer&install_backuply=1&security='.wp_create_nonce('loginizer_install_backuply'))).'">'.__('Install Backuply', 'loginizer').'</a>&nbsp;&nbsp;<a class="button button-secondary" target="_blank" href="https://wordpress.org/plugins/backuply/">'.__('Visit Backuply','loginizer').'</a>
+						</div>
+					</td>
+				</tr>
+			</table>
+	</div><br />
+	<script type="text/javascript">
+		function loginizer_dismiss_backuply(){
+	
+			var data = new Object();
+			data["action"] = "loginizer_dismiss_backuply";
+			data["nonce"]	= "'.wp_create_nonce('loginizer_admin_ajax').'";
+			
+			var admin_url = "'.admin_url().'"+"admin-ajax.php";
+			jQuery.post(admin_url, data, function(response){
+				
+			});
+			
+		}
+	
+		jQuery(document).on("click", ".lz-backuply-dismissible .notice-dismiss", loginizer_dismiss_backuply);
+	</script>';
+	
+	return true;
+}
+
+function loginizer_csrf_promo(){
+
+	echo '<div class="notice notice-success is-dismissible lz-csrf-dismissible"><p>Secure your WordPress site from CSRF attacks with our new feature <strong>CSRF Protection</strong> <a href="https://loginizer.com/docs/configuration-and-settings/how-to-enable-csrf-protection/" target="_blank" class="button button-primary">Read More</a></p></div>';
+	
+	echo'<script type="text/javascript">
+		function loginizer_dismiss_csrf(){
+	
+			var data = new Object();
+			data["action"] = "loginizer_dismiss_csrf";
+			data["nonce"]	= "'.wp_create_nonce('loginizer_admin_ajax').'";
+			
+			var admin_url = "'.admin_url().'"+"admin-ajax.php";
+			jQuery.post(admin_url, data, function(response){
+				
+			});
+			
+		}
+	
+		jQuery(document).on("click", ".lz-csrf-dismissible", loginizer_dismiss_csrf);
+	</script>';
+}
+
+// Install Backuply
+function loginizer_backuply_install(){
+	
+	// Include the necessary stuff
+	include_once( ABSPATH . 'wp-admin/includes/plugin-install.php' );
+
+	// Includes necessary for Plugin_Upgrader and Plugin_Installer_Skin
+	include_once( ABSPATH . 'wp-admin/includes/file.php' );
+	include_once( ABSPATH . 'wp-admin/includes/misc.php' );
+	include_once( ABSPATH . 'wp-admin/includes/class-wp-upgrader.php' );
+
+	// Filter to prevent the activate text
+	add_filter('install_plugin_complete_actions', 'loginizer_backuply_install_complete_actions', 10, 3);
+
+	$upgrader = new Plugin_Upgrader( new Plugin_Installer_Skin() );
+	$installed = $upgrader->install('https://downloads.wordpress.org/plugin/backuply.zip');
+	
+	if ( !is_wp_error( $installed ) && $installed ) {
+		echo 'Activating Backuply !';
+		$activate = activate_plugin('backuply/backuply.php');
+		
+		if ( is_null($activate) ) {
+			echo '<div id="message" class="updated"><p>'. esc_html__('Done! Backuply is now installed and activated.', 'loginizer'). '</p></div><br /><br><br><b>'. esc_html__('Done! Backuply is now installed and activated.', 'loginizer').'</b>';
+		}
+	}
+	
+	return $installed;
+}
+
+// Prevent pro activate text for installer
+function loginizer_backuply_install_complete_actions($install_actions, $api, $plugin_file){
+	
+	if($plugin_file == 'backuply/backuply.php'){
+		return array();
+	}
+	
+	return $install_actions;
 }
 
 

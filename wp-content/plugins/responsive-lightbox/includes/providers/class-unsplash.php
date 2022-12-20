@@ -210,7 +210,8 @@ class Responsive_Lightbox_Remote_Library_Unsplash extends Responsive_Lightbox_Re
 			'thumbnail_orientation'	=> $thumbnail_height > $thumbnail_width ? 'portrait' : 'landscape',
 			'media_provider'		=> 'unsplash',
 			'filename'				=> basename( $result['urls']['raw'] ),
-			'dimensions'			=> $width . ' x ' . $height
+			'dimensions'			=> $width . ' x ' . $height,
+			'type'					=> 'image'
 		];
 
 		// create thumbnail link

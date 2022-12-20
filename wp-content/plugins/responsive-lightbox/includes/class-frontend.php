@@ -263,7 +263,7 @@ class Responsive_Lightbox_Frontend {
 				if ( $result[1] !== 'norl' ) {
 					// gallery?
 					if ( $args['settings']['plugin']['images_as_gallery'] || $args['settings']['plugin']['force_custom_gallery'] )
-						$link = preg_replace( '/data-rel=(\'|")(.*?)(\'|")/s', 'data-rel="' . $args['selector'] . '-gallery-' . $this->gallery_no . '" data-rl_title="__RL_IMAGE_TITLE__" data-rl_caption="__RL_IMAGE_CAPTION__"' . ( $args['script'] === 'magnific' ? ' data-magnific_type="gallery"' : '' ) . ( $args['script'] === 'imagelightbox' ? ' data-imagelightbox="' . $args['link_number'] . '"' : '' ), $link );
+						$link = preg_replace( '/data-rel=(\'|")(.*?)(\'|")/s', 'data-rel="' . $args['selector'] . '-gallery-' . base64_encode( $result[1] ) . '" data-rl_title="__RL_IMAGE_TITLE__" data-rl_caption="__RL_IMAGE_CAPTION__"' . ( $args['script'] === 'magnific' ? ' data-magnific_type="gallery"' : '' ) . ( $args['script'] === 'imagelightbox' ? ' data-imagelightbox="' . $args['link_number'] . '"' : '' ), $link );
 					// single image
 					else
 						$link = preg_replace( '/data-rel=(\'|")(.*?)(\'|")/s', 'data-rel="' . $args['selector'] . '-image-' . base64_encode( $result[1] ) . '"' . ( $args['script'] === 'magnific' ? ' data-magnific_type="image"' : '' ) . ( $args['script'] === 'imagelightbox' ? ' data-imagelightbox="' . $args['link_number'] . '"' : '' ) . ' data-rl_title="__RL_IMAGE_TITLE__" data-rl_caption="__RL_IMAGE_CAPTION__"', $link );
@@ -414,21 +414,13 @@ class Responsive_Lightbox_Frontend {
 		if ( ! ( isset( $args['link'] ) && $args['link'] != 'file' ) ) {
 			// gallery image size
 			if ( ! empty( $args['image_id'] ) ) {
-				if ( $args['settings']['plugin']['gallery_image_size'] !== 'full' ) {
+				if ( empty( $args['src'] ) )
 					$args['src'] = wp_get_attachment_image_src( $args['image_id'], $args['settings']['plugin']['gallery_image_size'] );
 
-					if ( preg_match( '/<a.*? href=("|\').*?("|\').*?>/is', $link ) === 1 )
-						$link = preg_replace( '/(<a.*? href=(?:"|\')).*?((?:"|\').*?>)/', '$1' . $args['src'][0] . '$2', $link );
-					else
-						$link = preg_replace( '/(<a.*?)>/', '$1 href="' . $args['src'][0] . '">', $link );
-				} else {
-					$args['src'] = wp_get_attachment_image_src( $args['image_id'], 'full' );
-
-					if ( preg_match( '/<a.*? href=("|\').*?("|\').*?>/is', $link ) === 1 )
-						$link = preg_replace( '/(<a.*? href=(?:"|\')).*?((?:"|\').*?>)/', '$1' . $args['src'][0] . '$2', $link );
-					else
-						$link = preg_replace( '/(<a.*?)>/', '$1 href="' . $args['src'][0] . '">', $link );
-				}
+				if ( preg_match( '/<a.*? href=("|\').*?("|\').*?>/is', $link ) === 1 )
+					$link = preg_replace( '/(<a.*? href=(?:"|\')).*?((?:"|\').*?>)/', '$1' . $args['src'][0] . '$2', $link );
+				else
+					$link = preg_replace( '/(<a.*?)>/', '$1 href="' . $args['src'][0] . '">', $link );
 			}
 
 			if ( $args['script'] === 'magnific' )
@@ -864,8 +856,12 @@ class Responsive_Lightbox_Frontend {
 				// create image source data
 				$args['src'] = array( $new_image['url'], $new_image['width'], $new_image['height'], $new_image );
 
+				// update image id
+				if ( ! empty( $new_image['id'] ) )
+					$args['image_id'] = $new_image['id'];
+
 				// set alt text
-				$images[$index]['alt'] = ! empty( $new_image['alt'] ) ? esc_attr( $new_image['alt'] ) : ( ! empty( $new_image['id'] ) ? get_post_meta( $new_image['id'], '_wp_attachment_image_alt', true ) : '' );
+				$images[$index]['alt'] = $shortcode_atts['alt'] = ! empty( $new_image['alt'] ) ? $new_image['alt'] : ( ! empty( $new_image['id'] ) ? get_post_meta( $new_image['id'], '_wp_attachment_image_alt', true ) : '' );
 
 				// set lightbox image title
 				if ( $args['settings']['plugin']['gallery_image_title'] === 'default' )
@@ -931,8 +927,10 @@ class Responsive_Lightbox_Frontend {
 
 		$attr = apply_filters( 'rl_gallery_image_link_attributes', $attr, $attachment_id, $image, $args );
 
+		// escape attributes
 		$attr = array_map( 'esc_attr', $attr );
-		$link = rtrim( "<a " );
+
+		$link = '<a';
 
 		foreach ( $attr as $name => $value ) {
 			$link .= " $name=" . '"' . $value . '"';
@@ -940,7 +938,7 @@ class Responsive_Lightbox_Frontend {
 
 		$link .= '>';
 		$link .= apply_filters( 'rl_gallery_image_link_before', '', $attachment_id, $args );
-		$link .= '<img src="' . $thumbnail[0] . '" width="' . $thumbnail[1] . '" height="' . $thumbnail[2] . '" />';
+		$link .= '<img src="' . esc_url( $thumbnail[0] ) . '" width="' . (int) $thumbnail[1] . '" height="' . (int) $thumbnail[2] . '" alt="' . esc_attr( $args['alt'] ) . '" />';
 
 		// embed element?
 		if ( preg_match( '/^e\d+$/', $attachment_id ) === 1 ) {
@@ -964,7 +962,6 @@ class Responsive_Lightbox_Frontend {
 		}
 
 		$link .= apply_filters( 'rl_gallery_image_link_after', '', $attachment_id, $args );
-
 		$link .= '</a>';
 
 		return apply_filters( 'rl_gallery_image_link', $link, $attachment_id, $image, $thumbnail, $args );
@@ -1334,23 +1331,27 @@ class Responsive_Lightbox_Frontend {
 	}
 
 	/**
-	 * Get attachment id by url function, adjusted to work for cropped images
+	 * Get attachment id by url function, adjusted to work for cropped and scaled images.
 	 *
 	 * @param string $url
 	 * @return int
 	 */
 	public function get_attachment_id_by_url( $url ) {
+		// parse url
 		$url = ! empty( $url ) ? esc_url( $url ) : '';
 
-		// get cached data
-		// $post_id = wp_cache_get( md5( $url ), 'rl-attachment_id_by_url' );
-		$post_ids = get_transient( 'rl-attachment_ids_by_url' );
+		// set post id
 		$post_id = 0;
+
+		// get cached data
+		$post_ids = get_transient( 'rl-attachment_ids_by_url' );
 
 		// cached url not found?
 		if ( $post_ids === false || ! in_array( $url, array_keys( $post_ids ) ) ) {
+			// try to get post id
 			$post_id = attachment_url_to_postid( $url );
 
+			// no post id?
 			if ( ! $post_id ) {
 				$dir = wp_upload_dir();
 				$path = $url;
@@ -1358,21 +1359,26 @@ class Responsive_Lightbox_Frontend {
 				if ( strpos( $path, $dir['baseurl'] . '/' ) === 0 )
 					$path = substr( $path, strlen( $dir['baseurl'] . '/' ) );
 
+				// try to check full size image
 				if ( preg_match( '/^(.*)(\-\d*x\d*)(\.\w{1,})/i', $path, $matches ) )
 					$post_id = attachment_url_to_postid( $dir['baseurl'] . '/' . $matches[1] . $matches[3] );
+
+				// try to check scaled size image
+				if ( ! $post_id && ! empty( $matches[1] ) && ! empty( $matches[3] ) )
+					$post_id = attachment_url_to_postid( $dir['baseurl'] . '/' . $matches[1] . '-scaled' . $matches[3] );
 			}
 
 			// set the cache expiration, 24 hours by default
-			$expire = absint( apply_filters( 'rl_object_cache_expire', DAY_IN_SECONDS ) );
+			$expire = (int) apply_filters( 'rl_object_cache_expire', DAY_IN_SECONDS );
 
-			// wp_cache_add( md5( $url ), $post_id, 'rl-attachment_id_by_url', $expire );
-
+			// update post ids
 			$post_ids[$url] = $post_id;
 
+			// set transient
 			set_transient( 'rl-attachment_ids_by_url', $post_ids, $expire );
 		// cached url found
 		} elseif ( ! empty( $post_ids[$url] ) )
-			$post_id = absint( $post_ids[$url] );
+			$post_id = $post_ids[$url];
 
 	    return (int) apply_filters( 'rl_get_attachment_id_by_url', $post_id, $url );
 	}

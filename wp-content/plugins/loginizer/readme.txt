@@ -1,10 +1,10 @@
 === Loginizer ===
-Contributors: loginizer, pagelayer, softaculous
+Contributors: softaculous, loginizer, pagelayer
 Tags: security, access, admin, Loginizer, login, logs, ban ip, failed login, ip, whitelist ip, blacklist ip, failed attempts, lockouts, hack, authentication, login, security, rename login url, rename login, rename wp-admin, secure wp-admin, rename admin url, secure admin, brute force protection
 Requires at least: 3.0
-Tested up to: 6.0
+Tested up to: 6.1
 Requires PHP: 5.5
-Stable tag: 1.7.2
+Stable tag: 1.7.6
 License: LGPLv2.1
 License URI: http://www.gnu.org/licenses/lgpl-2.1.html
 
@@ -41,6 +41,7 @@ Pro Features :
 * reCAPTCHA - Google's reCAPTCHA v3/v2 can be configured for the Login screen, Comments Section, Registration Form, etc. to prevent automated brute force attacks. Supports WooCommerce as well.
 * Rename Login Page - The Admin can rename the login URL (slug) to something different from wp-login.php to prevent automated brute force attacks.
 * Rename WP-Admin URL - The Admin area in WordPress is accessed via wp-admin. With loginizer you can change it to anything e.g. site-admin
+* CSRF Protection - This helps in preventing CSRF attacks as it updates the admin URL with a session string which makes it difficult and nearly impossible for the attacker to predict the URL.
 * Rename Login with Secrecy - If set, then all Login URL's will still point to wp-login.php and users will have to access the New Login Slug by typing it in the browser.
 * Disable XML-RPC - An option to simply disable XML-RPC in WordPress. Most of the WordPress users don't need XML-RPC and can disable it to prevent automated brute force attacks.
 * Rename XML-RPC - The Admin can rename the XML-RPC to something different from xmlrpc.php to prevent automated brute force attacks.
@@ -76,6 +77,22 @@ That's it. You're done!
 3. Loginizer Brute Force Settings page
 
 == Changelog ==
+
+= 1.7.6 =
+* [Security] Minor security issues reported by patchstack have been fixed with in 24 hours of reporting.
+* [Bug-Fix] For some themes the Maths capatch input was invisible that has been fixed.
+
+= 1.7.5 =
+* [Task] Tested compatibility with WordPress 6.1
+* [Bug Fix] There was an issue with sanitizing URL that has been fixed.
+
+= 1.7.4 =
+* [Feature] CSRF Protection adds a unique session key in your admin URL when you login to it, which adds another layer of security to your WordPress website as it makes it difficult to predict the URL hence making it difficult and nearly impossible to do CSRF attacks on your WordPress admin panel.
+* [Task] 2FA Support for MasterStudy Custom Login
+* [Bug Fix] Some users were facing an error when using 2FA App verification that has been fixed.
+
+= 1.7.3 =
+* [Bug Fix] Added validation not to allow values less than 0 for all Brute Force admin settings.
 
 = 1.7.2 =
 * [Improvement] [Pro] Allowed HTML characters in Passwordless email.
@@ -140,7 +157,7 @@ This version includes a security fix and we recommend all users to upgrade to 1.
 
 = 1.6.1 =
 * [Fix] The captcha on Registration form when using WooCommerce was not being rendered if the "WooCommerce Checkout" captcha setting was disabled in Loginizer. This is fixed now and this captcha can be disabled with "Registration Form" captcha setting in Loginizer. 
-* [Fix] Minor checkbox pre filling UI fix on Two Factor Authentication page.
+* [Fix] Minor checkbox pre-filling UI fix on Two Factor Authentication page.
 
 = 1.6.0 =
 * [Feature] Admin can white list an IP or an IP range for Two Factor Authentication.
@@ -159,7 +176,7 @@ This version includes a security fix and we recommend all users to upgrade to 1.
 * [Fix] Prevent PHP Notice on 1st failed login attempt from an IP.
 
 = 1.5.6 =
-* [Task] Admins can now subscribe to our newsletter if they decide to opt in.
+* [Task] Admins can now subscribe to our newsletter if they decide to opt-in.
 
 = 1.5.5 =
 * [Bug Fix] Remember me during login was not working with 2FA features. This is fixed. 
@@ -211,7 +228,7 @@ This version includes a security fix and we recommend all users to upgrade to 1.
 
 = 1.4.2 =
 * [Task] Tested up to: WordPress 5.2.0
-* [Bug Fix] Placement of Captcha corrected for WooCommerce at the time of checkout for endusers.
+* [Bug Fix] Placement of Captcha corrected for WooCommerce at the time of checkout for end users.
 * [Bug Fix] Checksum check shall now skip for the files which are present in default WordPress package and does not exist in the installation like deleted theme(s)/plugin(s).
 * [Bug Fix] Grammar correction
 
@@ -283,7 +300,7 @@ This version includes a security fix and we recommend all users to upgrade to 1.
 
 = 1.3.1 =
 * [Feature] Admin's can now remove a user's Two Factor Authentication if needed
-* [Feature] Adden an option to change the Admin Username
+* [Feature] Added an option to change the Admin Username
 * [Feature] Auto Blacklist IPs if certain usernames saved by the Admin are used to login by malicious bots / users
 * [Feature] The Login attempt logs will now be shown as per the last attempt TIME and in Descending Order
 * [Feature] Added an option to Reset the Login attempts for all or specific IPs 
@@ -297,7 +314,7 @@ This version includes a security fix and we recommend all users to upgrade to 1.
 
 = 1.2.0 =
 * [Feature] Rename Login with Secrecy : If set, then all Login URL's will still point to wp-login.php and users will have to access the New Login Slug by typing it in the browser.
-* [Task] The brute force logs will now be sorted as per the time of failed login attemps
+* [Task] The brute force logs will now be sorted as per the time of failed login attempts
 * [Bug Fix] Dashboard showed wrong permissions if wp-content path had been changed
 * [Bug Fix] Added Directory path to include files which caused issues with some plugins
 

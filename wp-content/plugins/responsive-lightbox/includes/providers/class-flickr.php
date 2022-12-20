@@ -256,7 +256,8 @@ class Responsive_Lightbox_Remote_Library_Flickr extends Responsive_Lightbox_Remo
 			'thumbnail_orientation'	=> $small[2] > $small[1] ? 'portrait' : 'landscape',
 			'media_provider'		=> 'flickr',
 			'filename'				=> basename( $large[0] ),
-			'dimensions'			=> $large[1] . ' x ' . $large[2]
+			'dimensions'			=> $large[1] . ' x ' . $large[2],
+			'type'					=> 'image'
 		];
 
 		// create thumbnail link

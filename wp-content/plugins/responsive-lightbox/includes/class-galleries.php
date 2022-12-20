@@ -1457,6 +1457,7 @@ class Responsive_Lightbox_Galleries {
 				<td colspan="2" class="rl-colspan">
 					<div class="rl-gallery-preview-inside">
 						<a href="#" class="rl-gallery-update-preview button button-secondary">' . __( 'Update preview', 'responsive-lightbox' ) . '</a><span class="spinner" style="display: none;"></span>
+						<p class="description">' . __( 'Use this button after any change of the options below to see updated gallery preview.', 'responsive-lightbox' ) . '</p>
 					</div>
 					<div class="rl-gallery-content">
 						<ul class="rl-gallery-images rl-gallery-images-' . $menu_item . '">';
@@ -4738,7 +4739,7 @@ class Responsive_Lightbox_Galleries {
 
 					// display count
 					if ( ! empty( $image ) )
-						echo '<span class="media-icon image-icon">' . $image . '</span><span>' . sprintf( _n( '%s image', '%s images', $images_count, 'responsive-lightbox' ), $images_count ) . '</span>';
+						echo '<span class="media-icon image-icon">' . $image . '</span><span>' . sprintf( _n( '%s element', '%s elements', $images_count, 'responsive-lightbox' ), $images_count ) . '</span>';
 					else
 						echo '<span class="media-icon image-icon">' . wp_get_attachment_image( 0, array( 60, 60 ), true, array( 'alt' => '' ) ) . '</span>';
 					break;

@@ -3,8 +3,8 @@ Contributors: dfactory
 Donate link: http://www.dfactory.eu/
 Tags: gallery, galleries, image, images, responsive, lightbox, photo, photography, masonry, video, builder
 Requires at least: 5.0
-Tested up to: 6.0
-Stable tag: 2.4.1
+Tested up to: 6.1
+Stable tag: 2.4.2
 Requires PHP: 5.4
 License: MIT License
 License URI: http://opensource.org/licenses/MIT
@@ -139,6 +139,12 @@ Responsive Lightbox and Gallery plugin comes with many styles and effects alread
 2. screenshot-2.jpg
 
 == Changelog ==
+
+= 2.4.2 =
+* Fix: Potential XSS vulnerabilities related to settings validation
+* Fix: Missing image alt attribute
+* Fix: Undefined array key "type"
+* Fix: Possible invalid data passed to attachment_url_to_postid function
 
 = 2.4.1 =
 * Fix: WooCommerce product gallery
@@ -496,6 +502,5 @@ Initial release
 
 == Upgrade Notice ==
 
-= 2.4.1 =
-* Fix: WooCommerce product gallery
-* Fix: WooCommerce gallery lightbox
+= 2.4.2 =
+* Fix: Potential XSS vulnerabilities related to settings validation

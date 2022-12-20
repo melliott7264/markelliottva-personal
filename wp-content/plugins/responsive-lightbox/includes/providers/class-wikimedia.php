@@ -259,6 +259,7 @@ class Responsive_Lightbox_Remote_Library_Wikimedia extends Responsive_Lightbox_R
 			'media_provider'		=> 'wikimedia',
 			'filename'				=> $result['name'],
 			'dimensions'			=> $width . ' x ' . $height,
+			'type'					=> 'image'
 		];
 
 		// create thumbnail link

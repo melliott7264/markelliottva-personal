@@ -1,11 +1,11 @@
 === Yoast SEO ===
-Contributors: yoast, joostdevalk, omarreiss
+Contributors: yoast, joostdevalk, tdevalk
 Donate link: https://yoa.st/1up
 License: GPLv3
 License URI: http://www.gnu.org/licenses/gpl.html
 Tags: SEO, XML sitemap, Content analysis, Readability, Schema
-Tested up to: 6.0
-Stable tag: 19.5.1
+Tested up to: 6.1
+Stable tag: 19.11
 Requires PHP: 5.6.20
 
 Improve your WordPress SEO: Write better content and have a fully optimized WordPress site using the Yoast SEO plugin.
@@ -56,6 +56,7 @@ We know content is king, that's why Yoast SEO is famous for its **state-of-the-a
 * **[Premium]** An orphaned content filter to detect posts that have no links pointing towards them!
 * **[Premium]** SEO workouts to make working on your site as easy as ABC. These SEO workflows will get your site into shape in no time!
 * **[Premium]** **New!** Yoast SEO Premium comes with a new word complexity feature that gives you actionable feedback on using difficult words. This feature is in beta and English only for now.
+* **[Premium]** **New!** Yoast SEO Premium comes with a new inclusive language analysis that helps you write inclusive content. This feature is opt-in, in beta and English only for now.
 
 #### KEEP YOUR SITE IN PERFECT SHAPE
 
@@ -225,6 +226,10 @@ The plugins you buy at Yoast are called ‘premium plugins’ (even if Premium i
 
 [Read more on how to get support](https://yoa.st/3r2)
 
+= What happens to my data if I enable usage tracking? =
+
+[This page on yoast.com explains what data we collect to improve Yoast SEO](https://yoa.st/4w7). We only collect data when you explicitly opt in. Read more about how we handle your data in [our Privacy Policy](https://yoa.st/4w8). 
+
 = I have a different question than listed here =
 
 Your question has most likely been answered on our help center: [yoast.com/help/](https://yoa.st/1va).
@@ -240,55 +245,53 @@ Your question has most likely been answered on our help center: [yoast.com/help/
 
 == Changelog ==
 
-= 19.5.1 =
-Release Date: August 9th, 2022
+= 19.11 =
 
-Bugfixes:
+Release date: November 29th, 2022
 
-* Fixes a bug where a fatal error would be thrown on the front-end when Yoast SEO 19.5 was used with an older version of Yoast SEO Premium.
+Yoast SEO 19.11 is out now. We're optimizing the Yoast SEO plugin to use fewer resources. This helps make your site faster and more efficient. In this release, we're doing this by streamlining your database. Find out more about what's new in Yoast SEO 19.11 in [our release post](https://yoa.st/release-29-11-22)!
+ 
+#### Enhancements
 
-= 19.5 =
-Release Date: August 9th, 2022
+* Adds a WP-CLI command to clean up unused data from our custom database tables: `wp yoast cleanup`.
+* Performs a cleanup of indexables when a public post type (or taxonomy) becomes non-public.
+* Notifies users to run the SEO optimization when a non-public post type (or taxonomy) becomes public.
 
-Yoast SEO 19.5 is out today! This release includes more fixes and enhancements to enjoy. We've also made adjustments to our schema implementation, changing the order in which schema nodes are output. Read more about what's new in Yoast SEO 19.5 in [our release post in English](https://yoa.st/release-9-8-22) or [our release post in Spanish](https://yoa.st/release-9-8-22-spanish)!
+#### Bugfixes
 
-Enhancements:
+* Fixes a bug where a fatal error would be thrown when the SEO optimization was run after a post type had been manually excluded via a filter.
+* Fixes a bug where an entry would be added to our indexables table when saving, updating, or accessing a post (or term) for a non-public post type (or taxonomy).
+* Fixes a bug where duplicate indexable records would be created for the same object.
+* Fixes a bug where indexables for users would not get removed when a user did not have any publicly viewable posts anymore.
+* Fixes a bug where indexables for users would not get removed when author archives were disabled.
+* Fixes a bug where indexables would be created for users when author archives were disabled.
+* Fixes a bug where indexables would be created for users who did not have any publicly viewable posts.
 
-* Adds the site logo and name as default values in the first time configuration and search appearance.
-* Changes the order in which Schema nodes are output from `Organization / Person > WebSite > WebPage > Article` to `Article > WebPage > WebSite > Organization / Person`. This fixes validation issues for the Schema validator and puts the most important Schema content first.
+#### Other
 
-Bugfixes:
+* Introduces the `wpseo_indexable_excluded_taxonomies` filter, to allow manually excluding taxonomies from being indexed.
 
-* Fixes a bug where a text starting with a double quotation mark followed by a space(s) broke the analysis.
-* Fixes a bug where text which includes the non-breaking space character (`&nbsp;`) is not highlighted correctly.
-* Fixes a bug where the Algolia integration could not be controlled at network level.
-* Fixes a bug where the score indicator in the classic editor would not update the hovering text when the score changed.
-* Fixes a bug where the score indicators of the overview pages and admin bar where inconsistent. The taxonomy overview and admin bar score indicators now uses red to indicate `Focus keyphrase not set`. The admin bar score indicator now shows blue when set to `noindex`.
+= 19.10 =
 
-Other:
+Release date: November 8th, 2022
 
-* Hides the \"Save changes\" button in the \"Integrations\" tab in the \"Yoast SEO  > General\" page.
-* Sets the minimum supported WordPress version to 5.9.
+Yoast SEO 19.10 is out today. This release mostly consists of bug fixes and enhancements. In addition, we're getting our WordPress plugins ready for the upcoming High Performance Order Storage feature in WooCommerce 7.1+. Update now! Read more about what's new in Yoast SEO 19.10 in [our release post in English](https://yoa.st/release-8-11-22) or [our release post in Spanish](https://yoa.st/release-8-11-22-spanish)!
 
-= 19.4 =
-Release Date: July 26th, 2022
+#### Enhancements
 
-Yoast SEO 19.4 is out today! In this release, we’ve rolled out some improvements to our Schema structured data implementation. Additionally, we've fixed several bugs and added a couple of small enhancements to ensure you get the best user experience with Yoast SEO. But that's not all, we also have a new integration page coming in this release. Read more about what's new in Yoast SEO 19.4 in [our release post in English](https://yoa.st/release-26-7-22) or [our release post in Spanish](https://yoa.st/release-26-7-22-spanish)!
+* Improves the call-to-action feedback string of the Flesch Reading Ease insight when the text is recognized as fairly difficult.
 
-Enhancements:
+#### Bugfixes
 
-* Enhances the Integrations page and relocates it in the Yoast SEO sidebar menu.
-* Improves Schema for archive pages by using the featured image of the first post as `primaryImageOfPage` and by removing `potentialAction`.
-* Improves Schema for attachment pages by setting the proper `primaryImage` attribute.
-* Allows marking inside of Classic editor blocks in the Block/Gutenberg editor.
-* Improves the text analysis by adding curly (“”) and angular quotation marks («»).
-* Improves the text analysis by filtering out all versions of the ampersand (&).
-* Removes the date from the meta description for WooCommerce products.
+* Fixes a bug where a fatal error would be thrown in the classic editor in combination with certain plugins that misuse metabox hooks.
+* Fixes a bug where users with site-wide basic access authentication would be prompted to insert their credentials when saving a post in Elementor if they didn’t have the manage_options capability.
+* Fixes a bug where Yoast SEO-related post meta data would not be saved if a user without the manage_options capability would save a post in Elementor.
 
-Bugfixes:
+#### Other
 
-* Fixes a bug where a notice was shown indicating that the Flesch reading ease score has moved from the readability analysis to the Insights for languages that do not have Flesch reading ease support.
-* Fixes a bug where an `Undefined index: SERVER_NAME` warning would be triggered in cronjobs or WP CLI commands.
+* Deprecates the hooks used to add custom content to the Yoast SEO settings pages, in preparation for future releases. The following hooks have been deprecated: wpseo_tools_overview_list_items, wpseo_settings_tab_crawl_cleanup, wpseo_settings_tab_site_analysis, Yoast\WP\SEOdmin_author_archives_meta, Yoast\WP\SEOdmin_date_archives_meta, Yoast\WP\SEOdmin_post_types_beforearchive, Yoast\WP\SEOdmin_post_types_archive, Yoast\WP\SEOdmin_taxonomies_meta, wpseo_admin_other_section, wpseo_admin_opengraph_section, wpseo_admin_pinterest_section, wpseo_admin_twitter_section, wpseo_import_other_plugins.
+* Ensures compatibility with the High Performance Order Storage feature in WooCommerce 7.1+.
+* Sets the WordPress tested up to version to 6.1.
 
 = Earlier versions =
 For the changelog of earlier versions, please refer to [the changelog on yoast.com](https://yoa.st/yoast-seo-changelog).

@@ -1999,8 +1999,8 @@ class Responsive_Lightbox_Settings {
 						'disabled' => isset( $field['disabled'] ) ? (bool) $field['disabled'] : false,
 						'append' => ! empty( $field['append'] ) ? esc_html( $field['append'] ) : '',
 						'prepend' => ! empty( $field['prepend'] ) ? esc_html( $field['prepend'] ) : '',
-						'min' => ! empty( $field['min'] ) ? (int) $field['min'] : '',
-						'max' => ! empty( $field['max'] ) ? (int) $field['max'] : '',
+						'min' => isset( $field['min'] ) ? (int) $field['min'] : '',
+						'max' => isset( $field['max'] ) ? (int) $field['max'] : '',
 						'options' => ! empty( $field['options'] ) ? $field['options'] : '',
 						'fields' => ! empty( $field['fields'] ) ? $field['fields'] : '',
 						'after_field' => ! empty( $field['after_field'] ) ? $field['after_field'] : '',
@@ -2101,7 +2101,7 @@ class Responsive_Lightbox_Settings {
 				break;
 
 			case 'select':
-				$html .= '<select id="' . $args['id'] . '" name="' . $args['name'] . '" value="' . $args['value'] . '" ' . ( isset( $args['disabled'] ) && $args['disabled'] == true ? ' disabled="disabled"' : '' ) . '/>';
+				$html .= '<select id="' . $args['id'] . '" name="' . $args['name'] . '" value="' . esc_attr( $args['value'] ) . '" ' . ( isset( $args['disabled'] ) && $args['disabled'] == true ? ' disabled="disabled"' : '' ) . '/>';
 
 				foreach ( $args['options'] as $key => $name ) {
 					$html .= '<option value="' . $key . '" ' . selected( $args['value'], $key, false ) . '>' . $name . '</option>';
@@ -2127,17 +2127,17 @@ class Responsive_Lightbox_Settings {
 				break;
 
 			case 'range':
-				$html .= '<input id="' . $args['id'] . '" type="range" name="' . $args['name'] . '" value="' . $args['value'] . '" min="' . $args['min'] . '" max="' . $args['max'] . '" oninput="this.form.' . $args['id'] . '_range.value=this.value" />';
+				$html .= '<input id="' . $args['id'] . '" type="range" name="' . $args['name'] . '" value="' . (int) $args['value'] . '" min="' . $args['min'] . '" max="' . $args['max'] . '" oninput="this.form.' . $args['id'] . '_range.value=this.value" />';
 				$html .= '<output name="' . $args['id'] . '_range">' . (int) $args['value'] . '</output>';
 				break;
 
 			case 'color_picker':
-				$html .= '<input id="' . $args['id'] . '" class="color-picker" type="text" value="' . $args['value'] . '" name="' . $args['name'] . '" data-default-color="' . $args['default'] . '" />';
+				$html .= '<input id="' . $args['id'] . '" class="color-picker" type="text" value="' . esc_attr( $args['value'] ) . '" name="' . $args['name'] . '" data-default-color="' . $args['default'] . '" />';
 				break;
 
 			case 'number':
 				$html .= ( ! empty( $args['prepend'] ) ? '<span>' . $args['prepend'] . '</span> ' : '' );
-				$html .= '<input id="' . $args['id'] . '" type="text" value="' . $args['value'] . '" name="' . $args['name'] . '" />';
+				$html .= '<input id="' . $args['id'] . '" type="number" value="' . (int) $args['value'] . '" name="' . $args['name'] . '" />';
 				$html .= ( ! empty( $args['append'] ) ? ' <span>' . $args['append'] . '</span>' : '' );
 				break;
 
@@ -2154,7 +2154,7 @@ class Responsive_Lightbox_Settings {
 			case 'text':
 			default :
 				$html .= ( ! empty( $args['prepend'] ) ? '<span>' . $args['prepend'] . '</span> ' : '' );
-				$html .= '<input id="' . $args['id'] . '" class="' . $args['class'] . '" type="text" value="' . $args['value'] . '" name="' . $args['name'] . '" />';
+				$html .= '<input id="' . $args['id'] . '" class="' . $args['class'] . '" type="text" value="' . esc_attr( $args['value'] ) . '" name="' . $args['name'] . '" />';
 				$html .= ( ! empty( $args['append'] ) ? ' <span>' . $args['append'] . '</span>' : '' );
 		}
 
@@ -2202,7 +2202,8 @@ class Responsive_Lightbox_Settings {
 				break;
 
 			case 'color_picker':
-				$value = ! $value || '#' == $value ? '' : esc_attr( $value );
+				if ( empty( $value ) || preg_match( '/^#[a-f0-9]{6}$/i', $value ) !== 1 )
+					$value = '#666666';
 				break;
 
 			case 'number':
@@ -2222,6 +2223,17 @@ class Responsive_Lightbox_Settings {
 				break;
 
 			case 'text':
+				if ( ! empty( $args ) ) {
+					// validate custom events
+					if ( $args['setting_id'] === 'settings' ) {
+						if ( $args['field_id'] === 'enable_custom_events' && $args['subfield_id'] === 'custom_events' )
+						$value = preg_replace( '/[^a-z0-9 ]/i', '', $value );
+					} elseif ( $args['setting_id'] === 'builder' ) {
+						if ( $args['field_id'] === 'permalink' || $args['field_id'] === 'permalink_categories' || $args['field_id'] === 'permalink_tags' )
+							$value = sanitize_title( $value );
+					}
+					
+				}
 			case 'select':
 			default:
 				$value = is_array( $value ) ? array_map( 'sanitize_text_field', $value ) : sanitize_text_field( $value );
@@ -2270,24 +2282,33 @@ class Responsive_Lightbox_Settings {
 					if ( $field['type'] === 'multiple' ) {
 						if ( $field['fields'] ) {
 							foreach ( $field['fields'] as $subfield_id => $subfield ) {
+								$args = $subfield;
+								$args['setting_id'] = $setting_id;
+								$args['field_id'] = $field_id;
+								$args['subfield_id'] = $subfield_id;
+
 								// if subfield has parent
 								if ( ! empty( $this->settings[$setting_id]['fields'][$field_id]['fields'][$subfield_id]['parent'] ) ) {
 									$field_parent = $this->settings[$setting_id]['fields'][$field_id]['fields'][$subfield_id]['parent'];
 
-									$input[$field_parent][$subfield_id] = isset( $input[$field_parent][$subfield_id] ) ? $this->sanitize_field( $input[$field_parent][$subfield_id], $subfield['type'] ) : ( $subfield['type'] === 'boolean' ? false : $rl->defaults[$setting_id][$field_parent][$subfield_id] );
+									$input[$field_parent][$subfield_id] = isset( $input[$field_parent][$subfield_id] ) ? $this->sanitize_field( $input[$field_parent][$subfield_id], $subfield['type'], $args ) : ( $subfield['type'] === 'boolean' ? false : $rl->defaults[$setting_id][$field_parent][$subfield_id] );
 								} else {
-									$input[$subfield_id] = isset( $input[$subfield_id] ) ? $this->sanitize_field( $input[$subfield_id], $subfield['type'] ) : ( $subfield['type'] === 'boolean' ? false : $rl->defaults[$setting_id][$field_id][$subfield_id] );
+									$input[$subfield_id] = isset( $input[$subfield_id] ) ? $this->sanitize_field( $input[$subfield_id], $subfield['type'], $args ) : ( $subfield['type'] === 'boolean' ? false : $rl->defaults[$setting_id][$field_id][$subfield_id] );
 								}
 							}
 						}
 					} else {
+						$args = $field;
+						$args['setting_id'] = $setting_id;
+						$args['field_id'] = $field_id;
+
 						// if field has parent
 						if ( ! empty( $this->settings[$setting_id]['fields'][$field_id]['parent'] ) ) {
 							$field_parent = $this->settings[$setting_id]['fields'][$field_id]['parent'];
 
-							$input[$field_parent][$field_id] = isset( $input[$field_parent][$field_id] ) ? ( $field['type'] === 'checkbox' ? array_keys( $this->sanitize_field( $input[$field_parent][$field_id], $field['type'] ) ) : $this->sanitize_field( $input[$field_parent][$field_id], $field['type'] ) ) : ( in_array( $field['type'], array( 'boolean', 'checkbox' ) ) ? false : $rl->defaults[$setting_id][$field_parent][$field_id] );
+							$input[$field_parent][$field_id] = isset( $input[$field_parent][$field_id] ) ? ( $field['type'] === 'checkbox' ? array_keys( $this->sanitize_field( $input[$field_parent][$field_id], $field['type'], $args ) ) : $this->sanitize_field( $input[$field_parent][$field_id], $field['type'], $args ) ) : ( in_array( $field['type'], array( 'boolean', 'checkbox' ) ) ? false : $rl->defaults[$setting_id][$field_parent][$field_id] );
 						} else {
-							$input[$field_id] = isset( $input[$field_id] ) ? ( $field['type'] === 'checkbox' ? array_keys( $this->sanitize_field( $input[$field_id], $field['type'] ) ) : $this->sanitize_field( $input[$field_id], $field['type'] ) ) : ( in_array( $field['type'], array( 'boolean', 'checkbox' ) ) ? false : $rl->defaults[$setting_id][$field_id] );
+							$input[$field_id] = isset( $input[$field_id] ) ? ( $field['type'] === 'checkbox' ? array_keys( $this->sanitize_field( $input[$field_id], $field['type'], $args ) ) : $this->sanitize_field( $input[$field_id], $field['type'], $args ) ) : ( in_array( $field['type'], array( 'boolean', 'checkbox' ) ) ? false : $rl->defaults[$setting_id][$field_id] );
 						}
 					}
 				}

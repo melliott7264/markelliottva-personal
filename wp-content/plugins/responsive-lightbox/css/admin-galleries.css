@@ -354,6 +354,10 @@
 	margin: 4px 0 0 5px;
 	float: none;
 }
+.rl-gallery-preview-inside p.description {
+	margin-top: 12px;
+	min-height: 20px;
+}
 .rl-gallery-sortable-placeholder {
 	width: 148px;
 	height: 148px;

@@ -145,7 +145,7 @@ function lz_optreq($name, $default = ''){
 // For filling in posted values
 function lz_POSTval($name, $default = ''){
 	
-	return (!empty($_POST) ? (!isset($_POST[$name]) ? '' : $_POST[$name]) : $default);
+	return (!empty($_POST) ? (!isset($_POST[$name]) ? '' : esc_html($_POST[$name])) : $default);
 
 }
 

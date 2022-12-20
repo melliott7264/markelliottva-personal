@@ -59,16 +59,9 @@ if ( ! function_exists( 'twentytwentytwo_styles' ) ) :
 
 	}
 
-
 endif;
 
 add_action( 'wp_enqueue_scripts', 'twentytwentytwo_styles' );
 
 // Add block patterns
 require get_template_directory() . '/inc/block-patterns.php';
-
-// add_action('wp_enqueue_scripts', 'load_custom_fonts');
-
-// function load_custom_fonts() {
-// 	wp_enqueue_style('my_custom_fonts', 'https://fonts.googleapis.com/css2?family=Roboto+Slab:wght@300;700&family=Roboto:wght@400;700&display=swap');
-// }
